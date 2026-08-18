@@ -3,7 +3,8 @@ dist/
 .env
 .env.local
 *.log
-uploads/
+# Local disk upload cache only (not source under src/modules/uploads)
+/uploads/
 .DS_Store
 coverage/
 .vscode/
