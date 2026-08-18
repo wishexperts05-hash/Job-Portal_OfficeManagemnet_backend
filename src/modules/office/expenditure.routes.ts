@@ -1,14 +1,14 @@
 import { z } from 'zod';
 import { Router } from 'express';
 import mongoose from 'mongoose';
-import { Expenditure, EmployerProfile, OfficeEmployee } from '../../models/index.js';
-import { ACCOUNT_TYPES, TXN_TYPE, USER_STATUS } from '../../constants/index.js';
-import { asyncHandler } from '../../utils/asyncHandler.js';
-import { sendSuccess, sendCreated } from '../../utils/ApiResponse.js';
-import { validate } from '../../middlewares/validate.js';
-import { authenticate, authorize, requireMpinVerified } from '../../middlewares/auth.js';
-import { Errors } from '../../utils/ApiError.js';
-import { getPagination, paginationMeta } from '../../utils/pagination.js';
+import { Expenditure, EmployerProfile, OfficeEmployee } from '../../models/index.ts';
+import { ACCOUNT_TYPES, TXN_TYPE, USER_STATUS } from '../../constants/index.ts';
+import { asyncHandler } from '../../utils/asyncHandler.ts';
+import { sendSuccess, sendCreated } from '../../utils/ApiResponse.ts';
+import { validate } from '../../middlewares/validate.ts';
+import { authenticate, authorize, requireMpinVerified } from '../../middlewares/auth.ts';
+import { Errors } from '../../utils/ApiError.ts';
+import { getPagination, paginationMeta } from '../../utils/pagination.ts';
 
 const router = Router();
 

@@ -4,10 +4,10 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
-import { env, corsOrigins } from './config/env.js';
-import { globalRateLimiter } from './middlewares/rateLimiter.js';
-import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
-import routes from './routes/index.js';
+import { env, corsOrigins } from './config/env.ts';
+import { globalRateLimiter } from './middlewares/rateLimiter.ts';
+import { errorHandler, notFoundHandler } from './middlewares/errorHandler.ts';
+import routes from './routes/index.ts';
 
 export function createApp() {
   const app = express();

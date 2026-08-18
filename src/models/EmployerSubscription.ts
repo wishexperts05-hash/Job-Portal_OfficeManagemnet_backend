@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document, type Types } from 'mongoose';
-import { SUBSCRIPTION_STATUS } from '../constants/index.js';
+import { SUBSCRIPTION_STATUS } from '../constants/index.ts';
 
 export interface IEmployerSubscription extends Document {
   employerId: Types.ObjectId;

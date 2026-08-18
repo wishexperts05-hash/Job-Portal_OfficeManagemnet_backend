@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
-import { env } from '../../config/env.js';
-import { getRedis, cacheKeys } from '../../config/redis.js';
-import { ACCOUNT_TYPES, USER_STATUS, type AccountType } from '../../constants/index.js';
-import { OTP_CONFIG } from '../../constants/config.js';
+import { env } from '../../config/env.ts';
+import { getRedis, cacheKeys } from '../../config/redis.ts';
+import { ACCOUNT_TYPES, USER_STATUS, type AccountType } from '../../constants/index.ts';
+import { OTP_CONFIG } from '../../constants/config.ts';
 import {
   User,
   EmployerProfile,
@@ -10,18 +10,18 @@ import {
   RegistrationLead,
   SubscriptionPlan,
   EmployerSubscription,
-} from '../../models/index.js';
-import { Errors } from '../../utils/ApiError.js';
-import { generateOtp, sendOtpSms, storeOtp, verifyOtp } from '../../utils/otp.js';
-import { normalizeMobile, isValidIndianMobile } from '../../utils/mobile.js';
-import { assertMobileAvailableForRegistration } from '../../utils/portalMobile.js';
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../../utils/jwt.js';
-import { LEAD_STATUS, SUBSCRIPTION_STATUS } from '../../constants/index.js';
+} from '../../models/index.ts';
+import { Errors } from '../../utils/ApiError.ts';
+import { generateOtp, sendOtpSms, storeOtp, verifyOtp } from '../../utils/otp.ts';
+import { normalizeMobile, isValidIndianMobile } from '../../utils/mobile.ts';
+import { assertMobileAvailableForRegistration } from '../../utils/portalMobile.ts';
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../../utils/jwt.ts';
+import { LEAD_STATUS, SUBSCRIPTION_STATUS } from '../../constants/index.ts';
 import {
   pruneEmpty,
   type employerProfileFieldsSchema,
   type jobSeekerProfileFieldsSchema,
-} from '../profile/profile.schemas.js';
+} from '../profile/profile.schemas.ts';
 import type { z } from 'zod';
 
 type EmployerProfileFields = z.infer<typeof employerProfileFieldsSchema>;

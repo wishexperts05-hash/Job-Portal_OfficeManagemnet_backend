@@ -1,17 +1,17 @@
 import { z } from 'zod';
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
-import { Notification, User } from '../../models/index.js';
-import { asyncHandler } from '../../utils/asyncHandler.js';
-import { sendSuccess, sendCreated } from '../../utils/ApiResponse.js';
-import { validate } from '../../middlewares/validate.js';
-import { authenticate, authorize } from '../../middlewares/auth.js';
-import { ACCOUNT_TYPES } from '../../constants/index.js';
-import { Errors } from '../../utils/ApiError.js';
-import { getPagination, paginationMeta } from '../../utils/pagination.js';
-import { dispatchNotification } from '../../services/notify.service.js';
-import { subscribeUserEvents } from '../../services/realtime.service.js';
-import { verifyAccessToken } from '../../utils/jwt.js';
+import { Notification, User } from '../../models/index.ts';
+import { asyncHandler } from '../../utils/asyncHandler.ts';
+import { sendSuccess, sendCreated } from '../../utils/ApiResponse.ts';
+import { validate } from '../../middlewares/validate.ts';
+import { authenticate, authorize } from '../../middlewares/auth.ts';
+import { ACCOUNT_TYPES } from '../../constants/index.ts';
+import { Errors } from '../../utils/ApiError.ts';
+import { getPagination, paginationMeta } from '../../utils/pagination.ts';
+import { dispatchNotification } from '../../services/notify.service.ts';
+import { subscribeUserEvents } from '../../services/realtime.service.ts';
+import { verifyAccessToken } from '../../utils/jwt.ts';
 
 const router = Router();
 

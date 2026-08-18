@@ -1,4 +1,4 @@
-import { ATTENDANCE_STATUS } from '../constants/index.js';
+import { ATTENDANCE_STATUS } from '../constants/index.ts';
 
 /** Parse "HH:mm" to minutes from midnight. */
 export function minutesFromHm(hm?: string | null): number | null {

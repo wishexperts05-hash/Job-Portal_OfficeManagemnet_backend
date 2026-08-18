@@ -1,5 +1,5 @@
-import { PlatformSetting } from '../models/index.js';
-import { getRedis, cacheKeys } from '../config/redis.js';
+import { PlatformSetting } from '../models/index.ts';
+import { getRedis, cacheKeys } from '../config/redis.ts';
 
 export async function getPlatformSettingsMap(): Promise<Record<string, unknown>> {
   const redis = getRedis();

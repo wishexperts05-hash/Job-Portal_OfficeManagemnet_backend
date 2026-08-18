@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
-import { env } from '../config/env.js';
-import { PUSH_CONFIG } from '../constants/config.js';
+import { env } from '../config/env.ts';
+import { PUSH_CONFIG } from '../constants/config.ts';
 
 let initialized = false;
 

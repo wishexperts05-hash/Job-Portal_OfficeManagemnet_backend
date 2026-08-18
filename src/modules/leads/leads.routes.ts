@@ -1,18 +1,18 @@
 import { z } from 'zod';
 import { Router } from 'express';
-import { RegistrationLead } from '../../models/index.js';
-import { ACCOUNT_TYPES, LEAD_STATUS } from '../../constants/index.js';
-import { asyncHandler } from '../../utils/asyncHandler.js';
-import { sendSuccess } from '../../utils/ApiResponse.js';
-import { validate } from '../../middlewares/validate.js';
-import { normalizeMobile, isValidIndianMobile } from '../../utils/mobile.js';
-import { Errors } from '../../utils/ApiError.js';
-import { authenticate, authorize } from '../../middlewares/auth.js';
-import { getPagination, paginationMeta } from '../../utils/pagination.js';
+import { RegistrationLead } from '../../models/index.ts';
+import { ACCOUNT_TYPES, LEAD_STATUS } from '../../constants/index.ts';
+import { asyncHandler } from '../../utils/asyncHandler.ts';
+import { sendSuccess } from '../../utils/ApiResponse.ts';
+import { validate } from '../../middlewares/validate.ts';
+import { normalizeMobile, isValidIndianMobile } from '../../utils/mobile.ts';
+import { Errors } from '../../utils/ApiError.ts';
+import { authenticate, authorize } from '../../middlewares/auth.ts';
+import { getPagination, paginationMeta } from '../../utils/pagination.ts';
 import {
   notifyAdminsIncompleteLead,
   notifyAdminsLeadAbandoned,
-} from '../../services/notify.service.js';
+} from '../../services/notify.service.ts';
 
 const router = Router();
 

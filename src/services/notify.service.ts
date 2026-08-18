@@ -1,9 +1,9 @@
-import { Notification, User } from '../models/index.js';
-import { ACCOUNT_TYPES, USER_STATUS } from '../constants/index.js';
-import { sendEmail } from './email.service.js';
-import { sendPushNotification } from './push.service.js';
-import { getPlatformSettingsMap, getSettingBool } from '../utils/platformSettings.js';
-import { publishUserEvent } from './realtime.service.js';
+import { Notification, User } from '../models/index.ts';
+import { ACCOUNT_TYPES, USER_STATUS } from '../constants/index.ts';
+import { sendEmail } from './email.service.ts';
+import { sendPushNotification } from './push.service.ts';
+import { getPlatformSettingsMap, getSettingBool } from '../utils/platformSettings.ts';
+import { publishUserEvent } from './realtime.service.ts';
 
 function asStringRecord(data?: Record<string, unknown>): Record<string, string> | undefined {
   if (!data) return undefined;

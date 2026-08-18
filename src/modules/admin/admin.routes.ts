@@ -15,23 +15,23 @@ import {
   SalaryRecord,
   SubscriptionPlan,
   EmployerSubscription,
-} from '../../models/index.js';
-import { ACCOUNT_TYPES, JOB_STATUS, USER_STATUS, SUBSCRIPTION_STATUS } from '../../constants/index.js';
-import { asyncHandler } from '../../utils/asyncHandler.js';
-import { sendSuccess } from '../../utils/ApiResponse.js';
-import { validate } from '../../middlewares/validate.js';
-import { authenticate, authorize } from '../../middlewares/auth.js';
-import { Errors } from '../../utils/ApiError.js';
-import { getPagination, paginationMeta } from '../../utils/pagination.js';
-import { normalizeMobile, isValidIndianMobile } from '../../utils/mobile.js';
+} from '../../models/index.ts';
+import { ACCOUNT_TYPES, JOB_STATUS, USER_STATUS, SUBSCRIPTION_STATUS } from '../../constants/index.ts';
+import { asyncHandler } from '../../utils/asyncHandler.ts';
+import { sendSuccess } from '../../utils/ApiResponse.ts';
+import { validate } from '../../middlewares/validate.ts';
+import { authenticate, authorize } from '../../middlewares/auth.ts';
+import { Errors } from '../../utils/ApiError.ts';
+import { getPagination, paginationMeta } from '../../utils/pagination.ts';
+import { normalizeMobile, isValidIndianMobile } from '../../utils/mobile.ts';
 import {
   employerProfileFieldsSchema,
   pruneEmpty,
-} from '../profile/profile.schemas.js';
+} from '../profile/profile.schemas.ts';
 import {
   notifyJobApproved,
   notifyJobRejected,
-} from '../../services/notify.service.js';
+} from '../../services/notify.service.ts';
 
 const router = Router();
 

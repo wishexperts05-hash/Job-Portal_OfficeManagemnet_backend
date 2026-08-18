@@ -1,7 +1,7 @@
 import crypto from 'crypto';
-import { getRedis, cacheKeys } from '../config/redis.js';
-import { OTP_CONFIG } from '../constants/config.js';
-import { Errors } from './ApiError.js';
+import { getRedis, cacheKeys } from '../config/redis.ts';
+import { OTP_CONFIG } from '../constants/config.ts';
+import { Errors } from './ApiError.ts';
 
 export function generateOtp(): string {
   if (OTP_CONFIG.PROVIDER === 'mock') {

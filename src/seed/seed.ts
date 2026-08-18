@@ -1,8 +1,8 @@
-import { connectMongo } from '../config/db.js';
-import { env } from '../config/env.js';
-import { User, SubscriptionPlan, JobCategory, CmsPage, PlatformSetting } from '../models/index.js';
-import { ACCOUNT_TYPES, USER_STATUS } from '../constants/index.js';
-import { hashPassword } from '../modules/auth/auth.service.js';
+import { connectMongo } from '../config/db.ts';
+import { env } from '../config/env.ts';
+import { User, SubscriptionPlan, JobCategory, CmsPage, PlatformSetting } from '../models/index.ts';
+import { ACCOUNT_TYPES, USER_STATUS } from '../constants/index.ts';
+import { hashPassword } from '../modules/auth/auth.service.ts';
 import mongoose from 'mongoose';
 
 async function seed() {

@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { env } from '../config/env.js';
-import type { AccountType } from '../constants/index.js';
+import { env } from '../config/env.ts';
+import type { AccountType } from '../constants/index.ts';
 
 export interface AccessTokenPayload {
   sub: string;

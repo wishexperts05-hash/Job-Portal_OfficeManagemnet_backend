@@ -1,9 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
-import { Errors } from '../utils/ApiError.js';
-import { verifyAccessToken, type AccessTokenPayload } from '../utils/jwt.js';
-import type { AccountType } from '../constants/index.js';
-import { ACCOUNT_TYPES } from '../constants/index.js';
-import { getRedis, cacheKeys } from '../config/redis.js';
+import { Errors } from '../utils/ApiError.ts';
+import { verifyAccessToken, type AccessTokenPayload } from '../utils/jwt.ts';
+import type { AccountType } from '../constants/index.ts';
+import { ACCOUNT_TYPES } from '../constants/index.ts';
+import { getRedis, cacheKeys } from '../config/redis.ts';
 
 declare global {
   namespace Express {

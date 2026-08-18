@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { Router } from 'express';
-import { Banner, CmsPage, PlatformSetting } from '../../models/index.js';
-import { ACCOUNT_TYPES } from '../../constants/index.js';
-import { asyncHandler } from '../../utils/asyncHandler.js';
-import { sendSuccess, sendCreated } from '../../utils/ApiResponse.js';
-import { validate } from '../../middlewares/validate.js';
-import { authenticate, authorize } from '../../middlewares/auth.js';
-import { Errors } from '../../utils/ApiError.js';
-import { getRedis, cacheKeys } from '../../config/redis.js';
+import { Banner, CmsPage, PlatformSetting } from '../../models/index.ts';
+import { ACCOUNT_TYPES } from '../../constants/index.ts';
+import { asyncHandler } from '../../utils/asyncHandler.ts';
+import { sendSuccess, sendCreated } from '../../utils/ApiResponse.ts';
+import { validate } from '../../middlewares/validate.ts';
+import { authenticate, authorize } from '../../middlewares/auth.ts';
+import { Errors } from '../../utils/ApiError.ts';
+import { getRedis, cacheKeys } from '../../config/redis.ts';
 
 const router = Router();
 

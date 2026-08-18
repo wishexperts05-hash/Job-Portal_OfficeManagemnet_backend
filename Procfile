@@ -1,1 +1,1 @@
-web: node dist/server.js
+web: tsx src/server.ts

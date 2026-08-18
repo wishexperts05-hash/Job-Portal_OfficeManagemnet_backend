@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document, type Types } from 'mongoose';
-import { TXN_TYPE } from '../constants/index.js';
+import { TXN_TYPE } from '../constants/index.ts';
 
 export interface IExpenditure extends Document {
   employerId: Types.ObjectId;

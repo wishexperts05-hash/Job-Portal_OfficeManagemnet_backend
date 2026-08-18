@@ -3,15 +3,14 @@
   "version": "1.0.0",
   "description": "Textile Industry Job Portal + Office Management API",
   "type": "module",
-  "main": "dist/server.js",
+  "main": "src/server.ts",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "start:src": "tsx src/server.ts",
+    "build": "tsc --noEmit",
+    "start": "tsx src/server.ts",
     "seed": "tsx src/seed/seed.ts",
     "typecheck": "tsc --noEmit"
   },
@@ -40,6 +39,7 @@
     "morgan": "^1.11.0",
     "multer": "^2.2.0",
     "nodemailer": "^9.0.5",
+    "tsx": "^4.23.12",
     "uuid": "^14.0.1",
     "zod": "^4.4.3"
   },
@@ -56,7 +56,6 @@
     "@types/nodemailer": "^8.0.1",
     "@types/uuid": "^10.0.0",
     "nodemon": "^3.1.14",
-    "tsx": "^4.23.12",
     "typescript": "^7.0.2"
   }
 }

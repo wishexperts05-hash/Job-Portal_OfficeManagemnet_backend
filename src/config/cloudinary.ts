@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { env } from './env.js';
+import { env } from './env.ts';
 
 export function configureCloudinary(): void {
   if (!env.CLOUDINARY_CLOUD_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {

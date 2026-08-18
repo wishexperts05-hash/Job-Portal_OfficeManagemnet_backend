@@ -6,15 +6,15 @@ import {
   EmployerSubscription,
   PaymentOrder,
   EmployerProfile,
-} from '../../models/index.js';
-import { ACCOUNT_TYPES, SUBSCRIPTION_STATUS } from '../../constants/index.js';
-import { asyncHandler } from '../../utils/asyncHandler.js';
-import { sendSuccess, sendCreated } from '../../utils/ApiResponse.js';
-import { validate } from '../../middlewares/validate.js';
-import { authenticate, authorize } from '../../middlewares/auth.js';
-import { Errors } from '../../utils/ApiError.js';
-import { env } from '../../config/env.js';
-import { PAYMENT_CONFIG } from '../../constants/config.js';
+} from '../../models/index.ts';
+import { ACCOUNT_TYPES, SUBSCRIPTION_STATUS } from '../../constants/index.ts';
+import { asyncHandler } from '../../utils/asyncHandler.ts';
+import { sendSuccess, sendCreated } from '../../utils/ApiResponse.ts';
+import { validate } from '../../middlewares/validate.ts';
+import { authenticate, authorize } from '../../middlewares/auth.ts';
+import { Errors } from '../../utils/ApiError.ts';
+import { env } from '../../config/env.ts';
+import { PAYMENT_CONFIG } from '../../constants/config.ts';
 import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();

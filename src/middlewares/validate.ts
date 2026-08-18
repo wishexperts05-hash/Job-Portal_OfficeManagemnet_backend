@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { ZodSchema } from 'zod';
-import { Errors } from '../utils/ApiError.js';
+import { Errors } from '../utils/ApiError.ts';
 
 type Source = 'body' | 'query' | 'params';
 

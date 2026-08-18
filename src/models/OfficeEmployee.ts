@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document, type Types } from 'mongoose';
-import { USER_STATUS } from '../constants/index.js';
+import { USER_STATUS } from '../constants/index.ts';
 
 export interface IOfficeEmployee extends Document {
   employerId: Types.ObjectId;

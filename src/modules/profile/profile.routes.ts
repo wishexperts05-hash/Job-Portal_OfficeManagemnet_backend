@@ -1,16 +1,16 @@
 import { Router } from 'express';
-import { ACCOUNT_TYPES } from '../../constants/index.js';
-import { EmployerProfile, JobSeekerProfile, User } from '../../models/index.js';
-import { authenticate, authorize } from '../../middlewares/auth.js';
-import { validate } from '../../middlewares/validate.js';
-import { asyncHandler } from '../../utils/asyncHandler.js';
-import { sendSuccess } from '../../utils/ApiResponse.js';
-import { Errors } from '../../utils/ApiError.js';
+import { ACCOUNT_TYPES } from '../../constants/index.ts';
+import { EmployerProfile, JobSeekerProfile, User } from '../../models/index.ts';
+import { authenticate, authorize } from '../../middlewares/auth.ts';
+import { validate } from '../../middlewares/validate.ts';
+import { asyncHandler } from '../../utils/asyncHandler.ts';
+import { sendSuccess } from '../../utils/ApiResponse.ts';
+import { Errors } from '../../utils/ApiError.ts';
 import {
   employerProfileFieldsSchema,
   jobSeekerProfileFieldsSchema,
   pruneEmpty,
-} from './profile.schemas.js';
+} from './profile.schemas.ts';
 
 const router = Router();
 

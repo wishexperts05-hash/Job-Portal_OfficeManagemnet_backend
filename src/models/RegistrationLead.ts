@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document } from 'mongoose';
-import { ACCOUNT_TYPES, LEAD_STATUS } from '../constants/index.js';
+import { ACCOUNT_TYPES, LEAD_STATUS } from '../constants/index.ts';
 
 export interface IRegistrationLead extends Document {
   accountType: 'employer' | 'job_seeker';

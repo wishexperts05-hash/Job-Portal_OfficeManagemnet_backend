@@ -1,6 +1,6 @@
-import { ACCOUNT_TYPES, USER_STATUS, type AccountType } from '../constants/index.js';
-import { User } from '../models/index.js';
-import { ApiError } from './ApiError.js';
+import { ACCOUNT_TYPES, USER_STATUS, type AccountType } from '../constants/index.ts';
+import { User } from '../models/index.ts';
+import { ApiError } from './ApiError.ts';
 
 const PORTAL_ACCOUNT_TYPES = [ACCOUNT_TYPES.EMPLOYER, ACCOUNT_TYPES.JOB_SEEKER] as const;
 

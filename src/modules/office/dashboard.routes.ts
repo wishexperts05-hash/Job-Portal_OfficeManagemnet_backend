@@ -7,11 +7,11 @@ import {
   Expenditure,
   OfficeEmployee,
   Task,
-} from '../../models/index.js';
-import { ACCOUNT_TYPES, ATTENDANCE_STATUS, TASK_STATUS, TXN_TYPE, USER_STATUS } from '../../constants/index.js';
-import { asyncHandler } from '../../utils/asyncHandler.js';
-import { sendSuccess } from '../../utils/ApiResponse.js';
-import { authenticate, authorize, requireMpinVerified } from '../../middlewares/auth.js';
+} from '../../models/index.ts';
+import { ACCOUNT_TYPES, ATTENDANCE_STATUS, TASK_STATUS, TXN_TYPE, USER_STATUS } from '../../constants/index.ts';
+import { asyncHandler } from '../../utils/asyncHandler.ts';
+import { sendSuccess } from '../../utils/ApiResponse.ts';
+import { authenticate, authorize, requireMpinVerified } from '../../middlewares/auth.ts';
 
 const router = Router();
 

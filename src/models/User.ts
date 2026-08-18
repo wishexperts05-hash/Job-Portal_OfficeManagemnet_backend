@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document, type Types } from 'mongoose';
-import { ACCOUNT_TYPES, USER_STATUS, type AccountType } from '../constants/index.js';
+import { ACCOUNT_TYPES, USER_STATUS, type AccountType } from '../constants/index.ts';
 
 export interface IUser extends Document {
   _id: Types.ObjectId;

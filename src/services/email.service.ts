@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
-import { env } from '../config/env.js';
-import { EMAIL_CONFIG } from '../constants/config.js';
+import { env } from '../config/env.ts';
+import { EMAIL_CONFIG } from '../constants/config.ts';
 
 let transporter: Transporter | null = null;
 

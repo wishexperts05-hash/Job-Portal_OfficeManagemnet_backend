@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { env } from './env.js';
+import { env } from './env.ts';
 
 export async function connectMongo(): Promise<typeof mongoose> {
   mongoose.set('strictQuery', true);

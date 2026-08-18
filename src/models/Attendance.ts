@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document, type Types } from 'mongoose';
-import { ATTENDANCE_STATUS } from '../constants/index.js';
+import { ATTENDANCE_STATUS } from '../constants/index.ts';
 
 export interface IAttendance extends Document {
   employerId: Types.ObjectId;

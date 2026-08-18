@@ -1,5 +1,5 @@
 import multer from 'multer';
-import { Errors } from '../utils/ApiError.js';
+import { Errors } from '../utils/ApiError.ts';
 
 const storage = multer.memoryStorage();
 

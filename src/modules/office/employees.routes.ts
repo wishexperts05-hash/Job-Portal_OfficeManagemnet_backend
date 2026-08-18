@@ -4,16 +4,16 @@ import {
   OfficeEmployee,
   EmployerProfile,
   User,
-} from '../../models/index.js';
-import { ACCOUNT_TYPES, USER_STATUS } from '../../constants/index.js';
-import { asyncHandler } from '../../utils/asyncHandler.js';
-import { sendSuccess, sendCreated } from '../../utils/ApiResponse.js';
-import { validate } from '../../middlewares/validate.js';
-import { authenticate, authorize, requireMpinVerified } from '../../middlewares/auth.js';
-import { Errors } from '../../utils/ApiError.js';
-import { normalizeMobile, isValidIndianMobile } from '../../utils/mobile.js';
-import { getPagination, paginationMeta } from '../../utils/pagination.js';
-import { notifyEmployeeAdded } from '../../services/notify.service.js';
+} from '../../models/index.ts';
+import { ACCOUNT_TYPES, USER_STATUS } from '../../constants/index.ts';
+import { asyncHandler } from '../../utils/asyncHandler.ts';
+import { sendSuccess, sendCreated } from '../../utils/ApiResponse.ts';
+import { validate } from '../../middlewares/validate.ts';
+import { authenticate, authorize, requireMpinVerified } from '../../middlewares/auth.ts';
+import { Errors } from '../../utils/ApiError.ts';
+import { normalizeMobile, isValidIndianMobile } from '../../utils/mobile.ts';
+import { getPagination, paginationMeta } from '../../utils/pagination.ts';
+import { notifyEmployeeAdded } from '../../services/notify.service.ts';
 
 const router = Router();
 const aadhaarRegex = /^\d{12}$/;

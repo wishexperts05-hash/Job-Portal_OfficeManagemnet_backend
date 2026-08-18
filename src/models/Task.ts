@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document, type Types } from 'mongoose';
-import { TASK_STATUS } from '../constants/index.js';
+import { TASK_STATUS } from '../constants/index.ts';
 
 export interface ITask extends Document {
   employerId: Types.ObjectId;

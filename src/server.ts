@@ -1,9 +1,9 @@
-import { createApp } from './app.js';
-import { env } from './config/env.js';
-import { connectMongo } from './config/db.js';
-import { getRedis, disconnectRedis } from './config/redis.js';
-import { configureCloudinary } from './config/cloudinary.js';
-import { initFirebase } from './services/push.service.js';
+import { createApp } from './app.ts';
+import { env } from './config/env.ts';
+import { connectMongo } from './config/db.ts';
+import { getRedis, disconnectRedis } from './config/redis.ts';
+import { configureCloudinary } from './config/cloudinary.ts';
+import { initFirebase } from './services/push.service.ts';
 
 async function bootstrap() {
   configureCloudinary();

@@ -1,16 +1,16 @@
 import { z } from 'zod';
 import { Router } from 'express';
-import { ACCOUNT_TYPES } from '../../constants/index.js';
-import { asyncHandler } from '../../utils/asyncHandler.js';
-import { sendSuccess } from '../../utils/ApiResponse.js';
-import { validate } from '../../middlewares/validate.js';
-import { authenticate, authorize } from '../../middlewares/auth.js';
-import { otpRateLimiter } from '../../middlewares/rateLimiter.js';
-import * as authService from './auth.service.js';
+import { ACCOUNT_TYPES } from '../../constants/index.ts';
+import { asyncHandler } from '../../utils/asyncHandler.ts';
+import { sendSuccess } from '../../utils/ApiResponse.ts';
+import { validate } from '../../middlewares/validate.ts';
+import { authenticate, authorize } from '../../middlewares/auth.ts';
+import { otpRateLimiter } from '../../middlewares/rateLimiter.ts';
+import * as authService from './auth.service.ts';
 import {
   employerProfileFieldsSchema,
   jobSeekerProfileFieldsSchema,
-} from '../profile/profile.schemas.js';
+} from '../profile/profile.schemas.ts';
 
 const accountTypeSchema = z.enum([
   ACCOUNT_TYPES.EMPLOYER,

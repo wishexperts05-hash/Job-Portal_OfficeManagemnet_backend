@@ -59,4 +59,4 @@ export const SUBSCRIPTION_STATUS = {
 export const LOCALES = ['en', 'hi'] as const;
 export type Locale = (typeof LOCALES)[number];
 
-export * from './config.js';
+export * from './config.ts';
