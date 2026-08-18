@@ -4,10 +4,14 @@
   "description": "Textile Industry Job Portal + Office Management API",
   "type": "module",
   "main": "dist/server.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "start:src": "tsx src/server.ts",
     "seed": "tsx src/seed/seed.ts",
     "typecheck": "tsc --noEmit"
   },
