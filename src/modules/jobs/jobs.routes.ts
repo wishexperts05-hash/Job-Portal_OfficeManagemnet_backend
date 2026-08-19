@@ -77,6 +77,19 @@ router.get(
     if (req.query.q) {
       filter.$text = { $search: String(req.query.q) };
     }
+    if (req.query.salaryMin) {
+      const min = Number(req.query.salaryMin);
+      if (!Number.isNaN(min) && min > 0) {
+        // Match when either end of the offered range reaches the wanted salary
+        filter.$or = [{ salaryMax: { $gte: min } }, { salaryMin: { $gte: min } }];
+      }
+    }
+    if (req.query.fresher === 'true') {
+      filter.$and = [
+        ...((filter.$and as unknown[]) ?? []),
+        { $or: [{ experienceMin: { $lte: 0 } }, { experienceMin: { $exists: false } }] },
+      ];
+    }
 
     const [items, total] = await Promise.all([
       Job.find(filter)

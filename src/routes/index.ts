@@ -17,6 +17,7 @@ import subscriptionsRoutes from '../modules/subscriptions/subscriptions.routes.t
 import notificationsRoutes from '../modules/notifications/notifications.routes.ts';
 import uploadsRoutes from '../modules/uploads/uploads.routes.ts';
 import profileRoutes from '../modules/profile/profile.routes.ts';
+import talentRoutes from '../modules/talent/talent.routes.ts';
 
 const router = Router();
 
@@ -33,6 +34,7 @@ router.use('/profile', profileRoutes);
 router.use('/leads', leadsRoutes);
 router.use('/categories', categoriesRoutes);
 router.use('/jobs', jobsRoutes);
+router.use('/talent', talentRoutes);
 router.use('/office/dashboard', dashboardRoutes);
 router.use('/office/sites', sitesRoutes);
 router.use('/office/employees', employeesRoutes);

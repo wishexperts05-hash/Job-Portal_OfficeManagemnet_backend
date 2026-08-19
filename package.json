@@ -12,6 +12,7 @@
     "build": "tsc --noEmit",
     "start": "tsx src/server.ts",
     "seed": "tsx src/seed/seed.ts",
+    "seed:jobs": "tsx src/seed/seedJobs.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [

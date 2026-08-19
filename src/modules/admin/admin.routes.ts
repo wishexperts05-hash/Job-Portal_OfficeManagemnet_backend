@@ -341,7 +341,7 @@ async function requireEmployerUser(userId: string) {
 router.get(
   '/employers/:userId/employees',
   asyncHandler(async (req, res) => {
-    const user = await requireEmployerUser(req.params.userId!);
+    const user = await requireEmployerUser(String(req.params.userId));
     const { page, limit, skip, sort } = getPagination(req, 10, 100);
     const filter: Record<string, unknown> = { employerId: user._id };
     if (req.query.status) filter.status = req.query.status;
@@ -369,7 +369,7 @@ router.get(
 router.get(
   '/employers/:userId/tasks',
   asyncHandler(async (req, res) => {
-    const user = await requireEmployerUser(req.params.userId!);
+    const user = await requireEmployerUser(String(req.params.userId));
     const { page, limit, skip, sort } = getPagination(req, 10, 100);
     const filter: Record<string, unknown> = { employerId: user._id };
 
@@ -409,7 +409,7 @@ router.get(
 router.get(
   '/employers/:userId/attendance',
   asyncHandler(async (req, res) => {
-    const user = await requireEmployerUser(req.params.userId!);
+    const user = await requireEmployerUser(String(req.params.userId));
     const { page, limit, skip } = getPagination(req, 10, 200);
     const filter: Record<string, unknown> = { employerId: user._id };
 
@@ -441,7 +441,7 @@ router.get(
 router.get(
   '/employers/:userId/expenditures',
   asyncHandler(async (req, res) => {
-    const user = await requireEmployerUser(req.params.userId!);
+    const user = await requireEmployerUser(String(req.params.userId));
     const { page, limit, skip } = getPagination(req, 10, 100);
     const filter: Record<string, unknown> = {};
 
@@ -484,7 +484,7 @@ router.get(
 router.get(
   '/employers/:userId/salaries',
   asyncHandler(async (req, res) => {
-    const user = await requireEmployerUser(req.params.userId!);
+    const user = await requireEmployerUser(String(req.params.userId));
     const { page, limit, skip } = getPagination(req, 10, 100);
     const filter: Record<string, unknown> = { employerId: user._id };
 
