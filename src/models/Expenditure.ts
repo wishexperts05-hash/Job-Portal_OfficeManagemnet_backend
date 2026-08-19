@@ -2,8 +2,8 @@ import mongoose, { Schema, type Document, type Types } from 'mongoose';
 import { TXN_TYPE } from '../constants/index.ts';
 
 export interface IExpenditure extends Document {
-  employerId: Types.ObjectId;
-  employerProfileId: Types.ObjectId;
+  employerId?: Types.ObjectId;
+  employerProfileId?: Types.ObjectId;
   type: 'credit' | 'debit';
   amount: number;
   category: string;
@@ -23,8 +23,8 @@ export interface IExpenditure extends Document {
 
 const expenditureSchema = new Schema<IExpenditure>(
   {
-    employerId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    employerProfileId: { type: Schema.Types.ObjectId, ref: 'EmployerProfile', required: true },
+    employerId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
+    employerProfileId: { type: Schema.Types.ObjectId, ref: 'EmployerProfile' },
     type: { type: String, enum: Object.values(TXN_TYPE), required: true, index: true },
     amount: { type: Number, required: true, min: 0 },
     category: { type: String, required: true, index: true },
@@ -53,5 +53,6 @@ const expenditureSchema = new Schema<IExpenditure>(
 expenditureSchema.index({ employerId: 1, transactionDate: -1 });
 expenditureSchema.index({ employerId: 1, type: 1, category: 1, transactionDate: -1 });
 expenditureSchema.index({ employeeId: 1, transactionDate: -1 });
+expenditureSchema.index({ createdBy: 1, createdByRole: 1, transactionDate: -1 });
 
 export const Expenditure = mongoose.model<IExpenditure>('Expenditure', expenditureSchema);

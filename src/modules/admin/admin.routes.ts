@@ -443,12 +443,18 @@ router.get(
   asyncHandler(async (req, res) => {
     const user = await requireEmployerUser(req.params.userId!);
     const { page, limit, skip } = getPagination(req, 10, 100);
-    const filter: Record<string, unknown> = { employerId: user._id };
+    const filter: Record<string, unknown> = {};
+
+    if (req.query.employeeId && mongoose.isValidObjectId(String(req.query.employeeId))) {
+      // Personal employee expenses linked to a membership (legacy + audit)
+      filter.employeeId = new mongoose.Types.ObjectId(String(req.query.employeeId));
+    } else {
+      // Company books only — never mix personal employee expenses
+      filter.employerId = user._id;
+      filter.$or = [{ employeeId: { $exists: false } }, { employeeId: null }];
+    }
 
     if (req.query.type) filter.type = req.query.type;
-    if (req.query.employeeId && mongoose.isValidObjectId(String(req.query.employeeId))) {
-      filter.employeeId = new mongoose.Types.ObjectId(String(req.query.employeeId));
-    }
     if (req.query.month && req.query.year) {
       const m = Number(req.query.month);
       const y = Number(req.query.year);
@@ -1018,8 +1024,10 @@ router.get(
     const filter: Record<string, unknown> = {};
 
     if (scope === 'employee') {
-      filter.employeeId = { $exists: true, $ne: null };
+      // Personal employee expenses (universal ledger)
+      filter.createdByRole = 'office_employee';
     } else {
+      // Company books only
       filter.$or = [{ employeeId: { $exists: false } }, { employeeId: null }];
     }
 

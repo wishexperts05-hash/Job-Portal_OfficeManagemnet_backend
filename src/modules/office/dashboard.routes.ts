@@ -117,7 +117,12 @@ router.get(
           },
         ]),
         Expenditure.aggregate([
-          { $match: { employeeId: membership._id, employerId: new mongoose.Types.ObjectId(employerId) } },
+          {
+            $match: {
+              createdBy: new mongoose.Types.ObjectId(req.user!.id),
+              createdByRole: 'office_employee',
+            },
+          },
           { $group: { _id: '$type', total: { $sum: '$amount' } } },
         ]),
       ]);

@@ -20,6 +20,14 @@ async function membershipsForUser(userId: string, employerId?: string) {
   });
 }
 
+/** Personal employee expenses — universal across companies (by login user). */
+function personalExpenseFilter(userId: string) {
+  return {
+    createdBy: userId,
+    createdByRole: 'office_employee',
+  };
+}
+
 /** Company-level (employer-owned) vs employee-owned personal expenses */
 function companyOnlyFilter() {
   return {
@@ -63,12 +71,10 @@ router.get(
       filter.employerId = req.user!.id;
       Object.assign(filter, companyOnlyFilter());
     } else if (req.user!.accountType === ACCOUNT_TYPES.OFFICE_EMPLOYEE) {
-      // Employee sees only their own expenditures
-      const employerId = req.query.employerId ? String(req.query.employerId) : undefined;
-      const memberships = await membershipsForUser(req.user!.id, employerId);
+      // Personal ledger — same for every company login
+      const memberships = await membershipsForUser(req.user!.id);
       if (!memberships.length) throw Errors.forbidden();
-      filter.employeeId = { $in: memberships.map((m) => m._id) };
-      if (employerId) filter.employerId = employerId;
+      Object.assign(filter, personalExpenseFilter(req.user!.id));
     } else if (req.query.employerId) {
       filter.employerId = req.query.employerId;
     }
@@ -107,29 +113,32 @@ router.post(
     }),
   ),
   asyncHandler(async (req, res) => {
-    let employerId = req.user!.id;
+    let employerId: string | undefined;
+    let employerProfileId: string | undefined;
     let createdByRole: 'employer' | 'office_employee' = 'employer';
     let employeeId: string | undefined;
 
     if (req.user!.accountType === ACCOUNT_TYPES.OFFICE_EMPLOYEE) {
-      employerId = req.body.employerId;
-      if (!employerId) throw Errors.badRequest('employerId required');
-      const membership = await OfficeEmployee.findOne({
-        userId: req.user!.id,
-        employerId,
-        status: USER_STATUS.ACTIVE,
-      });
-      if (!membership) throw Errors.forbidden('Not a member of this company');
+      // Personal expense — not tied to selected company
+      const memberships = await membershipsForUser(req.user!.id);
+      if (!memberships.length) throw Errors.forbidden('Not an active employee');
       createdByRole = 'office_employee';
-      employeeId = String(membership._id);
+      // Optional audit link to one membership (active employer if provided, else first)
+      const preferred =
+        (req.body.employerId
+          ? memberships.find((m) => String(m.employerId) === String(req.body.employerId))
+          : undefined) || memberships[0];
+      employeeId = preferred ? String(preferred._id) : undefined;
+    } else {
+      employerId = req.user!.id;
+      const profile = await EmployerProfile.findOne({ userId: employerId });
+      if (!profile) throw Errors.notFound('Employer profile not found');
+      employerProfileId = String(profile._id);
     }
 
-    const profile = await EmployerProfile.findOne({ userId: employerId });
-    if (!profile) throw Errors.notFound('Employer profile not found');
-
     const txn = await Expenditure.create({
-      employerId,
-      employerProfileId: profile._id,
+      ...(employerId ? { employerId } : {}),
+      ...(employerProfileId ? { employerProfileId } : {}),
       type: req.body.type,
       amount: req.body.amount,
       category: req.body.category,
@@ -161,11 +170,11 @@ router.get(
       match.employerId = toObjectId(req.user!.id);
       Object.assign(match, companyOnlyFilter());
     } else if (req.user!.accountType === ACCOUNT_TYPES.OFFICE_EMPLOYEE) {
-      const employerId = req.query.employerId ? String(req.query.employerId) : undefined;
-      const memberships = await membershipsForUser(req.user!.id, employerId);
+      const memberships = await membershipsForUser(req.user!.id);
       if (!memberships.length) throw Errors.forbidden();
-      match.employeeId = { $in: memberships.map((m) => m._id) };
-      if (employerId) match.employerId = toObjectId(employerId);
+      Object.assign(match, personalExpenseFilter(req.user!.id));
+      // ObjectIds for aggregation match
+      match.createdBy = toObjectId(req.user!.id);
     } else {
       const employerId = String(req.query.employerId || '');
       if (!employerId) throw Errors.badRequest('employerId required');
