@@ -328,6 +328,180 @@ router.get(
   }),
 );
 
+async function requireEmployerUser(userId: string) {
+  if (!mongoose.isValidObjectId(userId)) throw Errors.badRequest('Invalid employer id');
+  const user = await User.findOne({
+    _id: userId,
+    accountType: ACCOUNT_TYPES.EMPLOYER,
+  }).lean();
+  if (!user) throw Errors.notFound('Employer not found');
+  return user;
+}
+
+router.get(
+  '/employers/:userId/employees',
+  asyncHandler(async (req, res) => {
+    const user = await requireEmployerUser(req.params.userId!);
+    const { page, limit, skip, sort } = getPagination(req, 10, 100);
+    const filter: Record<string, unknown> = { employerId: user._id };
+    if (req.query.status) filter.status = req.query.status;
+    if (req.query.q) {
+      const q = String(req.query.q).trim();
+      if (q) {
+        filter.$or = [
+          { fullName: new RegExp(q, 'i') },
+          { mobile: new RegExp(q, 'i') },
+          { designation: new RegExp(q, 'i') },
+          { department: new RegExp(q, 'i') },
+          { employeeCode: new RegExp(q, 'i') },
+        ];
+      }
+    }
+
+    const [items, total] = await Promise.all([
+      OfficeEmployee.find(filter).sort(sort).skip(skip).limit(limit).lean(),
+      OfficeEmployee.countDocuments(filter),
+    ]);
+    sendSuccess(res, items, 'Employer employees', 200, paginationMeta(total, page, limit));
+  }),
+);
+
+router.get(
+  '/employers/:userId/tasks',
+  asyncHandler(async (req, res) => {
+    const user = await requireEmployerUser(req.params.userId!);
+    const { page, limit, skip, sort } = getPagination(req, 10, 100);
+    const filter: Record<string, unknown> = { employerId: user._id };
+
+    if (req.query.status) filter.status = req.query.status;
+    if (req.query.priority) filter.priority = req.query.priority;
+    if (req.query.employeeId && mongoose.isValidObjectId(String(req.query.employeeId))) {
+      filter.assignedToEmployeeIds = new mongoose.Types.ObjectId(String(req.query.employeeId));
+    }
+    if (req.query.dueDate) {
+      const day = String(req.query.dueDate).slice(0, 10);
+      const start = new Date(`${day}T00:00:00.000Z`);
+      const end = new Date(`${day}T23:59:59.999Z`);
+      filter.dueDate = { $gte: start, $lte: end };
+    } else if (req.query.month && req.query.year) {
+      const m = String(req.query.month).padStart(2, '0');
+      const y = String(req.query.year);
+      const start = new Date(`${y}-${m}-01T00:00:00.000Z`);
+      const end = new Date(start);
+      end.setUTCMonth(end.getUTCMonth() + 1);
+      end.setUTCMilliseconds(-1);
+      filter.dueDate = { $gte: start, $lte: end };
+    }
+
+    const [items, total] = await Promise.all([
+      Task.find(filter)
+        .sort(sort.dueDate || sort.createdAt ? sort : { createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('assignedToEmployeeIds', 'fullName mobile designation')
+        .lean(),
+      Task.countDocuments(filter),
+    ]);
+    sendSuccess(res, items, 'Employer tasks', 200, paginationMeta(total, page, limit));
+  }),
+);
+
+router.get(
+  '/employers/:userId/attendance',
+  asyncHandler(async (req, res) => {
+    const user = await requireEmployerUser(req.params.userId!);
+    const { page, limit, skip } = getPagination(req, 10, 200);
+    const filter: Record<string, unknown> = { employerId: user._id };
+
+    if (req.query.employeeId && mongoose.isValidObjectId(String(req.query.employeeId))) {
+      filter.employeeId = new mongoose.Types.ObjectId(String(req.query.employeeId));
+    }
+    if (req.query.date) {
+      filter.date = String(req.query.date).slice(0, 10);
+    } else if (req.query.month && req.query.year) {
+      const m = String(req.query.month).padStart(2, '0');
+      const y = String(req.query.year);
+      filter.date = { $regex: `^${y}-${m}` };
+    }
+    if (req.query.status) filter.status = req.query.status;
+
+    const [items, total] = await Promise.all([
+      Attendance.find(filter)
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('employeeId', 'fullName mobile designation')
+        .lean(),
+      Attendance.countDocuments(filter),
+    ]);
+    sendSuccess(res, items, 'Employer attendance', 200, paginationMeta(total, page, limit));
+  }),
+);
+
+router.get(
+  '/employers/:userId/expenditures',
+  asyncHandler(async (req, res) => {
+    const user = await requireEmployerUser(req.params.userId!);
+    const { page, limit, skip } = getPagination(req, 10, 100);
+    const filter: Record<string, unknown> = { employerId: user._id };
+
+    if (req.query.type) filter.type = req.query.type;
+    if (req.query.employeeId && mongoose.isValidObjectId(String(req.query.employeeId))) {
+      filter.employeeId = new mongoose.Types.ObjectId(String(req.query.employeeId));
+    }
+    if (req.query.month && req.query.year) {
+      const m = Number(req.query.month);
+      const y = Number(req.query.year);
+      const start = new Date(Date.UTC(y, m - 1, 1));
+      const end = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
+      filter.transactionDate = { $gte: start, $lte: end };
+    } else if (req.query.date) {
+      const day = String(req.query.date).slice(0, 10);
+      const start = new Date(`${day}T00:00:00.000Z`);
+      const end = new Date(`${day}T23:59:59.999Z`);
+      filter.transactionDate = { $gte: start, $lte: end };
+    }
+
+    const [items, total] = await Promise.all([
+      Expenditure.find(filter)
+        .sort({ transactionDate: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('employeeId', 'fullName mobile')
+        .lean(),
+      Expenditure.countDocuments(filter),
+    ]);
+    sendSuccess(res, items, 'Employer expenditures', 200, paginationMeta(total, page, limit));
+  }),
+);
+
+router.get(
+  '/employers/:userId/salaries',
+  asyncHandler(async (req, res) => {
+    const user = await requireEmployerUser(req.params.userId!);
+    const { page, limit, skip } = getPagination(req, 10, 100);
+    const filter: Record<string, unknown> = { employerId: user._id };
+
+    if (req.query.employeeId && mongoose.isValidObjectId(String(req.query.employeeId))) {
+      filter.employeeId = new mongoose.Types.ObjectId(String(req.query.employeeId));
+    }
+    if (req.query.year) filter.year = Number(req.query.year);
+    if (req.query.month) filter.month = Number(req.query.month);
+    if (req.query.status) filter.status = req.query.status;
+
+    const [items, total] = await Promise.all([
+      SalaryRecord.find(filter)
+        .sort({ year: -1, month: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('employeeId', 'fullName mobile designation')
+        .lean(),
+      SalaryRecord.countDocuments(filter),
+    ]);
+    sendSuccess(res, items, 'Employer salaries', 200, paginationMeta(total, page, limit));
+  }),
+);
+
 router.patch(
   '/employers/:userId',
   validate(
