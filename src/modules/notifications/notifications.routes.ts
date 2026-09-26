@@ -10,7 +10,7 @@ import { ACCOUNT_TYPES } from '../../constants/index.ts';
 import { Errors } from '../../utils/ApiError.ts';
 import { getPagination, paginationMeta } from '../../utils/pagination.ts';
 import { dispatchNotification } from '../../services/notify.service.ts';
-import { subscribeUserEvents } from '../../services/realtime.service.ts';
+import { publishUserEvent, subscribeUserEvents } from '../../services/realtime.service.ts';
 import { verifyAccessToken } from '../../utils/jwt.ts';
 
 const router = Router();
@@ -109,7 +109,12 @@ router.patch(
       { new: true },
     );
     if (!n) throw Errors.notFound('Notification not found');
-    sendSuccess(res, n, 'Marked read');
+    const unreadCount = await Notification.countDocuments({
+      userId: req.user!.id,
+      isRead: false,
+    });
+    publishUserEvent(req.user!.id, { type: 'unread', unreadCount });
+    sendSuccess(res, { ...n.toObject(), unreadCount }, 'Marked read');
   }),
 );
 
@@ -121,7 +126,8 @@ router.post(
       { userId: req.user!.id, isRead: false },
       { $set: { isRead: true } },
     );
-    sendSuccess(res, { modified: result.modifiedCount }, 'All marked read');
+    publishUserEvent(req.user!.id, { type: 'unread', unreadCount: 0 });
+    sendSuccess(res, { modified: result.modifiedCount, unreadCount: 0 }, 'All marked read');
   }),
 );
 

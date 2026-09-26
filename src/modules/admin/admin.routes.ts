@@ -31,6 +31,7 @@ import {
 import {
   notifyJobApproved,
   notifyJobRejected,
+  notifySeekersNewJob,
 } from '../../services/notify.service.ts';
 
 const router = Router();
@@ -370,7 +371,7 @@ router.get(
   '/employers/:userId/tasks',
   asyncHandler(async (req, res) => {
     const user = await requireEmployerUser(String(req.params.userId));
-    const { page, limit, skip, sort } = getPagination(req, 10, 100);
+    const { page, limit, skip, sort } = getPagination(req, 10, 200);
     const filter: Record<string, unknown> = { employerId: user._id };
 
     if (req.query.status) filter.status = req.query.status;
@@ -389,8 +390,7 @@ router.get(
       const start = new Date(`${y}-${m}-01T00:00:00.000Z`);
       const end = new Date(start);
       end.setUTCMonth(end.getUTCMonth() + 1);
-      end.setUTCMilliseconds(-1);
-      filter.dueDate = { $gte: start, $lte: end };
+      filter.$or = [{ dueDate: { $gte: start, $lt: end } }, { createdAt: { $gte: start, $lt: end } }];
     }
 
     const [items, total] = await Promise.all([
@@ -442,7 +442,7 @@ router.get(
   '/employers/:userId/expenditures',
   asyncHandler(async (req, res) => {
     const user = await requireEmployerUser(String(req.params.userId));
-    const { page, limit, skip } = getPagination(req, 10, 100);
+    const { page, limit, skip } = getPagination(req, 10, 200);
     const filter: Record<string, unknown> = {};
 
     if (req.query.employeeId && mongoose.isValidObjectId(String(req.query.employeeId))) {
@@ -485,7 +485,7 @@ router.get(
   '/employers/:userId/salaries',
   asyncHandler(async (req, res) => {
     const user = await requireEmployerUser(String(req.params.userId));
-    const { page, limit, skip } = getPagination(req, 10, 100);
+    const { page, limit, skip } = getPagination(req, 10, 200);
     const filter: Record<string, unknown> = { employerId: user._id };
 
     if (req.query.employeeId && mongoose.isValidObjectId(String(req.query.employeeId))) {
@@ -663,42 +663,65 @@ router.get(
 
     const relatedEmployerIds = selectedEmployerId ? [selectedEmployerId] : employerIds;
 
+    const now = new Date();
+    const year = Number(req.query.year) || now.getFullYear();
+    const month = Number(req.query.month) || now.getMonth() + 1;
+    const safeYear = Number.isFinite(year) && year >= 2000 && year <= 2100 ? year : now.getFullYear();
+    const safeMonth =
+      Number.isFinite(month) && month >= 1 && month <= 12 ? month : now.getMonth() + 1;
+    const monthStart = new Date(Date.UTC(safeYear, safeMonth - 1, 1, 0, 0, 0, 0));
+    const monthEnd = new Date(Date.UTC(safeYear, safeMonth, 1, 0, 0, 0, 0));
+    const monthPrefix = `${safeYear}-${String(safeMonth).padStart(2, '0')}`;
+
     const taskFilter: Record<string, unknown> = {
       assignedToEmployeeIds: { $in: relatedEmployeeIds },
+      $or: [
+        { dueDate: { $gte: monthStart, $lt: monthEnd } },
+        { createdAt: { $gte: monthStart, $lt: monthEnd } },
+      ],
     };
     const attendanceFilter: Record<string, unknown> = {
       employeeId: { $in: relatedEmployeeIds },
+      date: { $regex: `^${monthPrefix}` },
     };
     const salaryFilter: Record<string, unknown> = {
       employeeId: { $in: relatedEmployeeIds },
+      year: safeYear,
+      month: safeMonth,
     };
     const expenditureQuery: Record<string, unknown> = {
       employeeId: { $in: relatedEmployeeIds },
+      transactionDate: { $gte: monthStart, $lt: monthEnd },
     };
     if (selectedEmployerId) {
       expenditureQuery.employerId = selectedEmployerId;
     }
 
-    const [tasks, attendance, salaries, expenditures, counts] = await Promise.all([
+    const [tasks, attendance, salaries, salaryHistory, expenditures, counts] = await Promise.all([
       Task.find(taskFilter)
-        .sort({ createdAt: -1 })
-        .limit(100)
+        .sort({ dueDate: 1, createdAt: -1 })
+        .limit(200)
         .populate('employerProfileId', 'companyName')
         .lean(),
       Attendance.find(attendanceFilter)
-        .sort({ date: -1 })
-        .limit(100)
+        .sort({ date: 1 })
+        .limit(62)
         .populate('employerProfileId', 'companyName')
         .populate('siteId', 'name city')
         .lean(),
       SalaryRecord.find(salaryFilter)
         .sort({ year: -1, month: -1 })
-        .limit(50)
+        .limit(20)
+        .populate('employerProfileId', 'companyName')
+        .lean(),
+      SalaryRecord.find({ employeeId: { $in: relatedEmployeeIds } })
+        .sort({ year: -1, month: -1 })
+        .limit(12)
         .populate('employerProfileId', 'companyName')
         .lean(),
       Expenditure.find(expenditureQuery)
         .sort({ transactionDate: -1 })
-        .limit(100)
+        .limit(200)
         .populate('employerProfileId', 'companyName')
         .lean(),
       Promise.all([
@@ -710,12 +733,20 @@ router.get(
       ]),
     ]);
 
-    const financeAgg = await Expenditure.aggregate([
-      { $match: { employeeId: { $in: relatedEmployeeIds } } },
-      { $group: { _id: '$type', total: { $sum: '$amount' } } },
+    const [financeAgg, monthFinanceAgg] = await Promise.all([
+      Expenditure.aggregate([
+        { $match: { employeeId: { $in: relatedEmployeeIds } } },
+        { $group: { _id: '$type', total: { $sum: '$amount' } } },
+      ]),
+      Expenditure.aggregate([
+        { $match: expenditureQuery },
+        { $group: { _id: '$type', total: { $sum: '$amount' } } },
+      ]),
     ]);
     const credit = financeAgg.find((row) => row._id === 'credit')?.total ?? 0;
     const debit = financeAgg.find((row) => row._id === 'debit')?.total ?? 0;
+    const monthCredit = monthFinanceAgg.find((row) => row._id === 'credit')?.total ?? 0;
+    const monthDebit = monthFinanceAgg.find((row) => row._id === 'debit')?.total ?? 0;
 
     sendSuccess(
       res,
@@ -731,9 +762,12 @@ router.get(
           companies: counts[4],
         },
         finance: { credit, debit, balance: credit - debit },
+        monthFinance: { credit: monthCredit, debit: monthDebit, balance: monthCredit - monthDebit },
+        filter: { year: safeYear, month: safeMonth },
         tasks,
         attendance,
         salaries,
+        salaryHistory,
         expenditures,
         relatedEmployerIds: relatedEmployerIds.map(String),
       },
@@ -972,6 +1006,12 @@ router.post(
     void notifyJobApproved({
       employerUserId: String(job.employerId),
       jobTitle: job.titleEn,
+    });
+    void notifySeekersNewJob({
+      jobId: String(job._id),
+      jobTitle: job.titleEn,
+      categoryId: job.categoryId ? String(job.categoryId) : undefined,
+      city: job.city,
     });
     sendSuccess(res, job, 'Job approved');
   }),

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { z } from 'zod';
 import { Router } from 'express';
 import {
@@ -15,7 +16,12 @@ import { validate } from '../../middlewares/validate.ts';
 import { authenticate, authorize, optionalAuth } from '../../middlewares/auth.ts';
 import { Errors } from '../../utils/ApiError.ts';
 import { getPagination, paginationMeta } from '../../utils/pagination.ts';
-import { notifyJobApplication, notifyAdminsJobPendingApproval } from '../../services/notify.service.ts';
+import {
+  notifyJobApplication,
+  notifyAdminsJobPendingApproval,
+  notifySeekerApplicationViewed,
+  notifySeekerProfileViewed,
+} from '../../services/notify.service.ts';
 
 const router = Router();
 
@@ -115,12 +121,67 @@ router.get(
     const filter: Record<string, unknown> = { employerId: req.user!.id };
     if (req.query.status) filter.status = req.query.status;
 
-    const [items, total] = await Promise.all([
+    const employerOid = new mongoose.Types.ObjectId(req.user!.id);
+
+    const [items, total, employerJobIds, stats] = await Promise.all([
       Job.find(filter).sort(sort).skip(skip).limit(limit).lean(),
       Job.countDocuments(filter),
+      Job.find({ employerId: employerOid }).distinct('_id'),
+      Job.aggregate<{ totalJobs: number; activeJobs: number; totalViews: number }>([
+        { $match: { employerId: employerOid } },
+        {
+          $group: {
+            _id: null,
+            totalJobs: { $sum: 1 },
+            activeJobs: {
+              $sum: { $cond: [{ $eq: ['$status', JOB_STATUS.PUBLISHED] }, 1, 0] },
+            },
+            totalViews: { $sum: '$viewsCount' },
+          },
+        },
+      ]),
     ]);
 
-    sendSuccess(res, items, 'Employer jobs', 200, paginationMeta(total, page, limit));
+    const pageJobIds = items.map((job) => job._id);
+    const [pageCounts, totalApplications] = await Promise.all([
+      pageJobIds.length
+        ? JobApplication.aggregate<{ _id: mongoose.Types.ObjectId; count: number }>([
+            { $match: { jobId: { $in: pageJobIds } } },
+            { $group: { _id: '$jobId', count: { $sum: 1 } } },
+          ])
+        : Promise.resolve([]),
+      employerJobIds.length
+        ? JobApplication.countDocuments({ jobId: { $in: employerJobIds } })
+        : Promise.resolve(0),
+    ]);
+
+    const countMap = new Map(pageCounts.map((row) => [String(row._id), row.count]));
+    const decorated = items.map((job) => ({
+      ...job,
+      applicationsCount: countMap.get(String(job._id)) ?? 0,
+    }));
+
+    const stale = items.filter(
+      (job) => (job.applicationsCount ?? 0) !== (countMap.get(String(job._id)) ?? 0),
+    );
+    if (stale.length) {
+      void Job.bulkWrite(
+        stale.map((job) => ({
+          updateOne: {
+            filter: { _id: job._id },
+            update: { $set: { applicationsCount: countMap.get(String(job._id)) ?? 0 } },
+          },
+        })),
+      );
+    }
+
+    sendSuccess(res, decorated, 'Employer jobs', 200, {
+      ...paginationMeta(total, page, limit),
+      totalApplications,
+      totalJobs: stats[0]?.totalJobs ?? 0,
+      activeJobs: stats[0]?.activeJobs ?? 0,
+      totalViews: stats[0]?.totalViews ?? 0,
+    });
   }),
 );
 
@@ -338,6 +399,7 @@ router.post(
       employerUserId: String(job.employerId),
       jobTitle: job.titleEn,
       seekerName: seekerProfile.fullName,
+      jobId: String(job._id),
     });
 
     sendCreated(res, application, 'Applied successfully');
@@ -364,11 +426,34 @@ router.get(
       .sort({ createdAt: -1 })
       .lean();
 
+    const pending = await JobApplication.find({ jobId: job._id, status: 'applied' })
+      .select('_id seekerId')
+      .lean();
+
     // Mark as viewed when employer opens the list
     await JobApplication.updateMany(
       { jobId: job._id, status: 'applied' },
       { $set: { status: 'viewed' } },
     );
+
+    if (pending.length && req.user!.accountType === ACCOUNT_TYPES.EMPLOYER) {
+      const company =
+        (await EmployerProfile.findById(job.employerProfileId).select('companyName').lean())
+          ?.companyName || 'An employer';
+      for (const app of pending) {
+        void notifySeekerApplicationViewed({
+          seekerUserId: String(app.seekerId),
+          jobTitle: job.titleEn,
+          companyName: company,
+          jobId: String(job._id),
+          applicationId: String(app._id),
+        });
+      }
+    }
+
+    if (apps.length !== (job.applicationsCount ?? 0)) {
+      void Job.updateOne({ _id: job._id }, { $set: { applicationsCount: apps.length } });
+    }
 
     sendSuccess(res, apps, 'Applications');
   }),
@@ -398,12 +483,35 @@ router.get(
 
     if (!application) throw Errors.notFound('Application not found');
 
-    if (application.status === 'applied') {
-      await JobApplication.updateOne(
-        { _id: application._id },
-        { $set: { status: 'viewed' } },
-      );
-      application.status = 'viewed';
+    const seeker = application.seekerId as { _id?: unknown } | string;
+    const seekerUserId =
+      typeof seeker === 'object' && seeker?._id ? String(seeker._id) : String(seeker);
+
+    if (req.user!.accountType === ACCOUNT_TYPES.EMPLOYER && seekerUserId) {
+      const company =
+        (await EmployerProfile.findById(job.employerProfileId).select('companyName').lean())
+          ?.companyName || 'An employer';
+
+      if (application.status === 'applied') {
+        await JobApplication.updateOne(
+          { _id: application._id },
+          { $set: { status: 'viewed' } },
+        );
+        application.status = 'viewed';
+        void notifySeekerApplicationViewed({
+          seekerUserId,
+          jobTitle: job.titleEn,
+          companyName: company,
+          jobId: String(job._id),
+          applicationId: String(application._id),
+        });
+      }
+
+      void notifySeekerProfileViewed({
+        seekerUserId,
+        companyName: company,
+        employerUserId: req.user!.id,
+      });
     }
 
     sendSuccess(res, application, 'Application details');

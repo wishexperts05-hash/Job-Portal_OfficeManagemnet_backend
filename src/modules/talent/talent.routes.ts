@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
 import { Router } from 'express';
-import { JobSeekerProfile, JobApplication, User } from '../../models/index.ts';
+import { JobSeekerProfile, JobApplication, User, EmployerProfile } from '../../models/index.ts';
 import { ACCOUNT_TYPES, USER_STATUS } from '../../constants/index.ts';
 import { asyncHandler } from '../../utils/asyncHandler.ts';
 import { sendSuccess } from '../../utils/ApiResponse.ts';
 import { authenticate, authorize } from '../../middlewares/auth.ts';
 import { Errors } from '../../utils/ApiError.ts';
+import { notifySeekerProfileViewed } from '../../services/notify.service.ts';
 import { getPagination, paginationMeta } from '../../utils/pagination.ts';
 
 const router = Router();
@@ -219,6 +220,17 @@ router.get(
       req.user!.accountType === ACCOUNT_TYPES.EMPLOYER
         ? await JobApplication.countDocuments({ seekerId: userId, employerId: req.user!.id })
         : 0;
+
+    if (req.user!.accountType === ACCOUNT_TYPES.EMPLOYER) {
+      const company =
+        (await EmployerProfile.findOne({ userId: req.user!.id }).select('companyName').lean())
+          ?.companyName || 'An employer';
+      void notifySeekerProfileViewed({
+        seekerUserId: userId,
+        companyName: company,
+        employerUserId: req.user!.id,
+      });
+    }
 
     sendSuccess(res, { user, profile, appliedToMine }, 'Candidate details');
   }),

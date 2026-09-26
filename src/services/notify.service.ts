@@ -1,4 +1,4 @@
-import { Notification, User } from '../models/index.ts';
+import { JobSeekerProfile, Notification, User } from '../models/index.ts';
 import { ACCOUNT_TYPES, USER_STATUS } from '../constants/index.ts';
 import { sendEmail } from './email.service.ts';
 import { sendPushNotification } from './push.service.ts';
@@ -176,6 +176,7 @@ export async function notifyJobApplication(input: {
   employerUserId: string;
   jobTitle: string;
   seekerName: string;
+  jobId?: string;
 }) {
   await safeNotify('notify_employer_new_application', {
     userId: input.employerUserId,
@@ -184,8 +185,141 @@ export async function notifyJobApplication(input: {
     titleHi: 'नया जॉब आवेदन',
     bodyEn: `${input.seekerName} applied for "${input.jobTitle}".`,
     bodyHi: `${input.seekerName} ने "${input.jobTitle}" के लिए आवेदन किया।`,
-    data: { event: 'job_application' },
+    data: {
+      event: 'job_application',
+      jobId: input.jobId,
+      link: '/employer/jobs',
+    },
   });
+}
+
+async function recentlyNotified(filter: Record<string, unknown>, hours = 12) {
+  const since = new Date(Date.now() - hours * 60 * 60 * 1000);
+  const existing = await Notification.findOne({
+    ...filter,
+    createdAt: { $gte: since },
+  })
+    .select('_id')
+    .lean();
+  return Boolean(existing);
+}
+
+export async function notifySeekerApplicationViewed(input: {
+  seekerUserId: string;
+  jobTitle: string;
+  companyName: string;
+  jobId?: string;
+  applicationId?: string;
+}) {
+  if (input.applicationId) {
+    const already = await recentlyNotified({
+      userId: input.seekerUserId,
+      type: 'application_viewed',
+      'data.applicationId': input.applicationId,
+    });
+    if (already) return;
+  }
+
+  await safeNotify('notify_seeker_application_updates', {
+    userId: input.seekerUserId,
+    type: 'application_viewed',
+    titleEn: 'Employer viewed your application',
+    titleHi: 'नियोक्ता ने आपका आवेदन देखा',
+    bodyEn: `${input.companyName} viewed your application for "${input.jobTitle}".`,
+    bodyHi: `${input.companyName} ने "${input.jobTitle}" के लिए आपका आवेदन देखा।`,
+    data: {
+      event: 'application_viewed',
+      jobId: input.jobId,
+      applicationId: input.applicationId,
+      link: '/seeker',
+    },
+  });
+}
+
+export async function notifySeekerProfileViewed(input: {
+  seekerUserId: string;
+  companyName: string;
+  employerUserId: string;
+}) {
+  if (!input.seekerUserId || input.seekerUserId === 'undefined') return;
+
+  const already = await recentlyNotified(
+    {
+      userId: input.seekerUserId,
+      type: 'profile_viewed',
+      'data.employerUserId': input.employerUserId,
+    },
+    2,
+  );
+  if (already) return;
+
+  try {
+    await dispatchNotification({
+      userId: input.seekerUserId,
+      type: 'profile_viewed',
+      titleEn: 'An employer viewed your profile',
+      titleHi: 'एक नियोक्ता ने आपकी प्रोफ़ाइल देखी',
+      bodyEn: `${input.companyName} opened your profile.`,
+      bodyHi: `${input.companyName} ने आपकी प्रोफ़ाइल खोली।`,
+      data: {
+        event: 'profile_viewed',
+        employerUserId: input.employerUserId,
+        link: '/seeker',
+      },
+      channel: ['in_app', 'push'],
+    });
+  } catch (err) {
+    console.error('[notify:profile-view] failed', err);
+  }
+}
+
+export async function notifySeekersNewJob(input: {
+  jobId: string;
+  jobTitle: string;
+  categoryId?: string;
+  city?: string;
+}) {
+  if (!input.categoryId) return;
+
+  try {
+    const enabled = await getSettingBool('notify_seeker_new_job_alerts', true);
+    if (!enabled) return;
+
+    const categoryMatch = { preferredJobCategories: input.categoryId };
+    const cityFallback = input.city
+      ? {
+          city: new RegExp(input.city.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'),
+          $or: [{ preferredJobCategories: { $exists: false } }, { preferredJobCategories: { $size: 0 } }],
+        }
+      : null;
+
+    const seekers = await JobSeekerProfile.find({
+      registrationCompleted: true,
+      $or: cityFallback ? [categoryMatch, cityFallback] : [categoryMatch],
+    })
+      .select('userId')
+      .lean();
+
+    await Promise.all(
+      seekers.map((seeker) =>
+        dispatchNotification({
+          userId: String(seeker.userId),
+          type: 'new_job_alert',
+          titleEn: 'New job in your trade',
+          titleHi: 'आपके काम में नई नौकरी',
+          bodyEn: `"${input.jobTitle}"${input.city ? ` in ${input.city}` : ''} is now open.`,
+          bodyHi: `"${input.jobTitle}"${input.city ? ` — ${input.city}` : ''} अब खुली है।`,
+          data: {
+            event: 'new_job_alert',
+            jobId: input.jobId,
+            link: `/jobs/${input.jobId}`,
+          },
+        }),
+      ),
+    );
+  } catch (err) {
+    console.error('[notify:new-job] failed', err);
+  }
 }
 
 export async function notifyTaskAssigned(input: {
